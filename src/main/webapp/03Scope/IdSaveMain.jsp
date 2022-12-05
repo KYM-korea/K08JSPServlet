@@ -33,7 +33,7 @@ if(!loginId.equals("")){
 		<input type="checkbox" name="save_check" value="Y" <%=cookieCheck %> tabindex="3"/>
 		아이디 저장하기
 		<br />
-		패스워드 : <input type="text" name="user_pw" tabindex="2"/>
+		패스워드 : <input type="text" name="user_pw"/>
 		<br />
 		<input type="submit" value="로그인하기" />
 	</form> 
