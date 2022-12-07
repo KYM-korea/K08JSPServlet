@@ -36,7 +36,7 @@
 	 개발시에는 에러를 확인한 후 디버깅하면서 진행해야 하므로
 	 개발이 완료될때까지는 주석으로 처리하는 것을 권장
 	 -->
-	<error-page>
+	<!-- <error-page>
 		<error-code>404</error-code>
 		<location>/02ImplicitObject/Exception.jsp</location>
 	</error-page>
@@ -47,5 +47,30 @@
 	<error-page>
 		<error-code>500</error-code>
 		<location>/02ImplicitObject/Exception.jsp</location>
-	</error-page>
+	</error-page> -->
+	
+	<!-- 
+	오라클 접속 정보를 컨텍스트 초기화 파라미터로 설정
+	해당 정보는 application 내장객체를 통해 값을 읽기가 가능
+	 -->
+	<context-param>
+		<param-name>OracleDriver</param-name>
+		<param-value>oracle.jdbc.OracleDriver</param-value>
+	</context-param>
+	<context-param>
+		<param-name>OracleURL</param-name>
+		<param-value>jdbc:oracle:thin:@localhost:1521:xe</param-value>
+	</context-param>
+	<context-param>
+		<param-name>OracleId</param-name>
+		<param-value>musthave</param-value>
+	</context-param>
+	<context-param>
+		<param-name>OraclePwd</param-name>
+		<param-value>1234</param-value>
+	</context-param>
+	<!-- 세션 유지시간 설정 : web.xml에서 분단위로 지정 -->
+	<session-config>
+		<session-timeout>15</session-timeout>
+	</session-config>
 </web-app>
