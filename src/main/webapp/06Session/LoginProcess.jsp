@@ -21,6 +21,7 @@ dao.close();
 
 if(memberDTO.getId() != null){
 	//로그인에 성공한 경우 세션영역에 회원아이디와 이름을 저장
+	//해당 변수명으로 저장하므로 기억!!!!
 	session.setAttribute("UserId", memberDTO.getId());
 	session.setAttribute("UserName", memberDTO.getName());
 	//로그인 페이지로 '이동'

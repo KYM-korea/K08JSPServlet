@@ -17,7 +17,6 @@
 	<jsp:setProperty name="person" property="age" value="56" />
 	<!-- 다음 페이지로 포워드 (3개의 파라미터를 전송) -->
 	<jsp:forward page="ParamForward.jsp?param1=김병영">
-		<!-- 여기에 주...석? -->
 		<jsp:param name="param2" value="경기도 양주" />
 		<jsp:param name="param3" value="<%=pValue %>" />
 	</jsp:forward>
