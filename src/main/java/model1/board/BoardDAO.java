@@ -233,4 +233,56 @@ public class BoardDAO extends JDBConnect{
 		
 		return result;
 	}
+	
+	//게시물 목록 출력시 페이징 기능 추가
+	public List<BoardDTO> selectListPage(Map<String, Object> map){
+		List<BoardDTO> bbs = new Vector<BoardDTO>();
+		
+		/*
+		 검색 조건에 일치하는 게시물을 얻어온 후 각 페이지에 출력할 구간
+		 까지 설정한 서브 쿼리문 작성
+		 */
+		String query = "SELECT * FROM ( "
+				+ "	SELECT Tb.*, ROWNUM rNum FROM ( "
+				+ "		SELECT * FROM board ";
+		//검색어가 있는 경우에만 where 추가
+		if(map.get("searchWord") != null) {
+			query += " WHERE " + map.get("searchField")
+				+ " LIKE '%" + map.get("searchWord") + "%' ";
+		}
+		//between을 통해 게시물을 구간 결정 가능
+		query += "		ORDER BY num DESC "
+				+ "	) Tb "
+				+ " ) "
+				+ " WHERE rNum BETWEEN ? AND ? ";
+		/*
+		between절 대신 비교연산자를 통해 쿼리문을 구성 가능
+		==> where rNum >= ? and rNum <= ?
+		 */
+		try {
+			//인파라미터가 있는 쿼리문이므로 prepared객체를 생성
+			psmt = con.prepareStatement(query);
+			//인파라미터를 설정 ( 구간의 시작과 끝을 계산한 값 )
+			psmt.setString(1, map.get("start").toString());
+			psmt.setString(2, map.get("end").toString());
+			//쿼리문을 실행 및 결과 레코드를 ResultSet으로 반환
+			rs = psmt.executeQuery();
+			//결과 레코드의 갯수만큼 반복하여 List컬렉션에 저장
+			while(rs.next()) {
+				BoardDTO dto = new BoardDTO();
+				dto.setNum(rs.getString("num"));
+				dto.setTitle(rs.getString("title"));
+				dto.setContent(rs.getString("content"));
+				dto.setPostdate(rs.getDate("postdate"));
+				dto.setId(rs.getString("id"));
+				dto.setVisitcount(rs.getString("visitcount"));
+				
+				bbs.add(dto);
+			}
+		}catch(Exception e) {
+			System.out.println("게시물 조회 중 예외 발생");
+			e.printStackTrace();
+		}
+		return bbs;
+	}
 }
