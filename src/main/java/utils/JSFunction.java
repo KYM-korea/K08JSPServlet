@@ -1,5 +1,8 @@
 package utils;
 
+import java.io.PrintWriter;
+
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
 
 public class JSFunction {
@@ -38,5 +41,39 @@ public class JSFunction {
 		}catch(Exception e) {
 			
 		}
+	}
+	
+	/*
+	앞의 2개의 메소드는 JSP에서 out내장객체를 받은 후 Javascript함수를 실행
+	but, 서블릿에서는 JSP의 내장객체를 매개변수로 받을 수 없으므로 out내장객체 대신
+	response내장객체를 통해 컨텐츠 타입을 설정한 후 JS코드를 실행
+	 */
+	public static void alertLocation(HttpServletResponse resp, String msg, String url) {
+		try {
+			//컨텐츠 타입을 설정
+			resp.setContentType("text/html;charset=UTF-8");
+			//PrintWriter 객체를 통해 스크립트를 서블렛에서 직접 출력
+			PrintWriter writer = resp.getWriter();
+
+			String script = ""
+					+ "<script>"
+					+ "	alert('"+msg+"');"
+					+ "	location.href='"+url+"';"
+					+ "</script>";
+			writer.println(script);
+		}catch(Exception e) {}
+	}
+	
+	public static void alertBack(HttpServletResponse resp, String msg) {
+		try {
+			resp.setContentType("text/html;charset=UTF-8");
+			PrintWriter writer = resp.getWriter();
+			String script = ""
+					+ "<script>"
+					+ "	alert('"+msg+"');"
+					+ "	history.back();"
+					+ "</script>";
+			writer.println(script);
+		}catch(Exception e) {}
 	}
 }

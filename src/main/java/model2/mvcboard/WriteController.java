@@ -1,0 +1,111 @@
+package model2.mvcboard;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.oreilly.servlet.MultipartRequest;
+
+import fileupload.FileUtil;
+import utils.JSFunction;
+
+/*
+ 글쓰기 페이지로 진입시에는 단순한 페이지이동이므로 doGet()이 요청을 처리
+ 글쓰기 페이지만 보여주면 문제 없음
+ 내용을 모두 채운 후 작성(submit)할 경우 post방식이므로 doPost()가
+ 요청을 받아 처리
+ */
+public class WriteController extends HttpServlet{
+
+	//글쓰기 페이지 진입시 요청 처리
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		//단순한 포워드 기능만 존재
+		req.getRequestDispatcher("/14MVCBoard/Write.jsp").forward(req, resp);
+	}
+	
+	//클라이언트가 작성한 내용을 DB에 입력하고 파일업로드 처리
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		//파일 업로드될 디렉토리의 물리적 경로를 획득
+		String saveDirectory = req.getServletContext().getRealPath("Uploads");
+		
+		//application 내장객체를 통해 web.xml에 등록된 초기화 파라미터를 획득
+		//업로드 제한용량은 현재 1mb로 설정
+		ServletContext application = getServletContext();
+		int maxPostSize = Integer.parseInt(application.getInitParameter("maxPostSize"));
+		
+		/*
+		파일업로드를 위해 MultipartRequest객체를 생성
+		객체가 정상적으로 생성될 경우 파일업로드는 완료
+		*/
+		MultipartRequest mr = FileUtil.uploadFile(req, saveDirectory, maxPostSize);
+		
+		/*
+		객체생성이 되지 않을 경우 업로드에 실패
+		파일의 용량이나 디렉토리의 경로를 재확인이 필요
+		( if. 글작성시 파일을 첨부하지 않더라도 객체는 생성되므로
+		폼값은 정상적으로 획득 가능 )
+		 */
+		if(mr == null) {
+			JSFunction.alertLocation(resp, "첨부파일이 제한 용량을 초과합니다.", "../mvcboard/write.do");
+
+			// 업로드 실패시 나머지 폼값도 획득 불가하므로 반드시 return으로 실행 중지
+			return;
+		}
+		//상단까지의 코드로 파일업로드 완료
+		
+		//파일을 제외한 나머지 폼값을 받아 DTO객체에 저장
+		//but, request 내장객체가 아닌 mr을 통해 획득
+		MVCBoardDTO dto= new MVCBoardDTO();
+		dto.setName(mr.getParameter("name"));
+		dto.setTitle(mr.getParameter("title"));
+		dto.setContent(mr.getParameter("content"));
+		dto.setPass(mr.getParameter("pass"));
+		
+		//서버에 업로드된 파일명을 획득
+		String fileName = mr.getFilesystemName("ofile");
+		/*
+		 서버에 저장된 파일이 있는 경우에만 파일명 변경 처리를 진행
+		 if. 첨부하지 않을 경우 아래 코드 실행 안됨
+		 */
+		if(fileName != null) {
+			//날짜와 시간을 이용해서 파일명을 생성
+			String now = new SimpleDateFormat("yyyyMMdd_HmsS").format(new Date());
+			//파일명의 마지막에 있는 .(닷)의 인덱스를 찾은 후 확장자 획득
+			String ext = fileName.substring(fileName.lastIndexOf("."));
+			//파일명과 확장자를 연결하여 새로운 파일명을 생성
+			String newFileName = now + ext;
+			
+			//파일 객체를 생ㄿ성한 후 파일명을 변경
+			File oldFile = new File(saveDirectory + File.separator + fileName);
+			File newFile = new File(saveDirectory + File.separator + newFileName);
+			oldFile.renameTo(newFile);
+			
+			//DTO객체에 원본파일명과 저장된 파일명을 저장
+			dto.setOfile(fileName);
+			dto.setSfile(newFileName);
+		}
+		
+		//새로운 게시물을 테이블에 입력
+		MVCBoardDAO dao = new MVCBoardDAO();
+		int result = dao.insertWrite(dto);
+		//커넥션풀 자원반납
+		dao.close();
+		
+		//서블릿에서 특정 요청명으로 이동시 sendRedirect()를 사용
+		if(result==1) {
+			//insert에 성공시 리스트로 이동
+			resp.sendRedirect("../mvcboard/list.do");
+		}else {
+			resp.sendRedirect("../mvcboard/write.do");
+		}
+	}
+}
